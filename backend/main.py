@@ -33,13 +33,12 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:3000",
         "http://127.0.0.1:3000",
-        "https://mohamedKandri.github.io",
-        "*"
+        "https://mohamedKandri.github.io",      # ✅ Your GitHub Pages
+        "https://mohamedkand.github.io",        # ✅ Alternative (check your username)
+        "https://pdf-audiobook-api.onrender.com", # ✅ Backend itself
+        "*"  # Keep for development (remove in production)
     ],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+
 
 # Configure paths
 BASE_DIR = Path(__file__).resolve().parent
