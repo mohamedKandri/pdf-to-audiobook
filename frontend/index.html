@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎧 PDF to Audiobook</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1><i class="fas fa-headphones"></i> PDF to Audiobook</h1>
+            <p class="subtitle">Transform your documents into audio books</p>
+        </header>
+
+        <!-- Upload Section -->
+        <section class="upload-section">
+            <div class="upload-zone" id="uploadZone">
+                <i class="fas fa-cloud-upload-alt upload-icon"></i>
+                <h3>Drag & Drop your PDF here</h3>
+                <p>or</p>
+                <label for="fileInput" class="upload-btn">
+                    <i class="fas fa-folder-open"></i> Browse Files
+                </label>
+                <input type="file" id="fileInput" accept=".pdf" hidden>
+            </div>
+            <p class="upload-hint">Only PDF files are supported (max 50MB)</p>
+        </section>
+
+        <!-- Processing Status -->
+        <section class="status-section" id="statusSection" style="display: none;">
+            <div class="status-card">
+                <div class="status-header">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <span id="statusText">Processing your PDF...</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <p class="status-detail" id="statusDetail">Extracting text...</p>
+            </div>
+        </section>
+
+        <!-- Audio Player Section -->
+        <section class="player-section" id="playerSection" style="display: none;">
+            <div class="player-card">
+                <div class="player-header">
+                    <i class="fas fa-book-open"></i>
+                    <span id="fileName">document.pdf</span>
+                </div>
+                
+                <audio id="audioPlayer" controls>
+                    <source src="" type="audio/mpeg">
+                    Your browser does not support the audio element.
+                </audio>
+
+                <div class="player-controls">
+                    <button class="control-btn" id="playPauseBtn">
+                        <i class="fas fa-play"></i>
+                    </button>
+                    <button class="control-btn" id="stopBtn">
+                        <i class="fas fa-stop"></i>
+                    </button>
+                    
+                    <div class="speed-control">
+                        <label>Speed:</label>
+                        <select id="speedSelect">
+                            <option value="0.5">0.5x</option>
+                            <option value="1" selected>1x</option>
+                            <option value="1.5">1.5x</option>
+                            <option value="2">2x</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="player-actions">
+                    <button class="action-btn download-btn" id="downloadBtn">
+                        <i class="fas fa-download"></i> Download Audio
+                    </button>
+                    <button class="action-btn convert-new-btn" id="convertNewBtn">
+                        <i class="fas fa-plus"></i> Convert Another
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Error Section -->
+        <section class="error-section" id="errorSection" style="display: none;">
+            <div class="error-card">
+                <i class="fas fa-exclamation-triangle"></i>
+                <h3>Oops! Something went wrong</h3>
+                <p id="errorMessage">Error message here</p>
+                <button class="error-btn" onclick="location.reload()">Try Again</button>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>🎧 PDF to Audiobook Converter | Built with FastAPI</p>
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
