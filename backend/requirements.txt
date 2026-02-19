@@ -17,3 +17,8 @@ python-dotenv>=1.0.0
 # OCR (for scanned PDFs - optional for now)
 # pytesseract>=0.3.10
 # pillow>=10.2.0
+
+# Audio processing for dialogue concatenation
+pydub>=0.25.1
+elevenlabs>=0.2.19
+python-dotenv>=1.0.0

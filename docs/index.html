@@ -3,17 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🎧 PDF to Audiobook</title>
+    <title>🎧 PDF to Audiobook Converter</title>
     <link rel="stylesheet" href="style.css">
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="container">
         <!-- Header -->
         <header class="header">
-            <h1><i class="fas fa-headphones"></i> PDF to Audiobook</h1>
-            <p class="subtitle">Transform your documents into audio books</p>
+            <div class="header-content">
+                <h1><i class="fas fa-headphones-alt"></i> PDF to Audiobook</h1>
+                <p class="subtitle">Transform your documents into immersive audio experiences</p>
+                <div class="header-badges">
+                    <span class="badge badge-primary"><i class="fas fa-bolt"></i> Fast</span>
+                    <span class="badge badge-success"><i class="fas fa-check"></i> Free</span>
+                    <span class="badge badge-info"><i class="fas fa-microphone-alt"></i> Multi-Voice</span>
+                </div>
+            </div>
         </header>
 
         <!-- Upload Section -->
@@ -27,7 +36,22 @@
                 </label>
                 <input type="file" id="fileInput" accept=".pdf" hidden>
             </div>
-            <p class="upload-hint">Only PDF files are supported (max 50MB)</p>
+            <p class="upload-hint">
+                <i class="fas fa-info-circle"></i> 
+                Only PDF files are supported (max 10MB for free tier)
+            </p>
+            
+            <!-- Dialogue Mode Info Box -->
+            <div class="dialogue-hint" id="dialogueHint" style="display: none;">
+                <strong><i class="fas fa-theater-masks"></i> Dialogue Mode Active!</strong><br>
+                Use tags in your PDF to switch voices automatically:<br>
+                <code>[NARRATOR]</code> or <code>[FEMALE]</code> → Female voice<br>
+                <code>[MALE]</code> → Male voice<br>
+                <code>[UK-MALE]</code> → British male voice<br>
+                <code>[UK-FEMALE]</code> → British female voice<br>
+                <br>
+                <em>Example: "[NARRATOR] He said [MALE] Hello [FEMALE] Hi there"</em>
+            </div>
         </section>
 
         <!-- Processing Status -->
@@ -35,12 +59,15 @@
             <div class="status-card">
                 <div class="status-header">
                     <i class="fas fa-spinner fa-spin"></i>
-                    <span id="statusText">Processing your PDF...</span>
+                    <span id="statusText">Converting PDF to Audio...</span>
                 </div>
                 <div class="progress-bar">
                     <div class="progress-fill" id="progressFill"></div>
                 </div>
-                <p class="status-detail" id="statusDetail">Extracting text...</p>
+                <p class="status-detail" id="statusDetail">Initializing...</p>
+                <p class="status-note">
+                    <i class="fas fa-clock"></i> First conversion may take 30-50 seconds (server waking up)
+                </p>
             </div>
         </section>
 
@@ -58,18 +85,50 @@
                 </audio>
 
                 <div class="player-controls">
-                    <button class="control-btn" id="playPauseBtn">
-                        <i class="fas fa-play"></i>
-                    </button>
-                    <button class="control-btn" id="stopBtn">
-                        <i class="fas fa-stop"></i>
-                    </button>
+                    <!-- Play/Pause & Stop Buttons -->
+                    <div class="control-group">
+                        <button class="control-btn control-btn-primary" id="playPauseBtn">
+                            <i class="fas fa-play"></i>
+                        </button>
+                        <button class="control-btn" id="stopBtn">
+                            <i class="fas fa-stop"></i>
+                        </button>
+                    </div>
                     
+                    <!-- Dialogue Mode Toggle -->
+                    <div class="dialogue-toggle">
+                        <label class="toggle-label">
+                            <input type="checkbox" id="dialogueModeToggle">
+                            <span class="toggle-slider"></span>
+                        </label>
+                        <span class="toggle-text">🎭 Dialogue Mode</span>
+                    </div>
+                    
+                    <!-- Voice Selection -->
+<select id="voiceSelect">
+    <optgroup label="🎙️ Calm & Relaxing">
+        <option value="en-gb-female">👩 British Female (Calm)</option>
+        <option value="en-gb-male">👨 British Male (Warm)</option>
+    </optgroup>
+    <optgroup label="🌎 Standard">
+        <option value="en-us-female">👩 American Female</option>
+        <option value="en-us-male">👨 American Male</option>
+    </optgroup>
+    <optgroup label="🌍 Other Accents">
+        <option value="en-au-female">👩 Australian Female</option>
+        <option value="en-in-male">👨 Indian Male</option>
+    </optgroup>
+</select>
+                    </div>
+                    
+                    <!-- Speed Control -->
                     <div class="speed-control">
-                        <label>Speed:</label>
+                        <label><i class="fas fa-tachometer-alt"></i> Speed:</label>
                         <select id="speedSelect">
                             <option value="0.5">0.5x</option>
+                            <option value="0.75">0.75x</option>
                             <option value="1" selected>1x</option>
+                            <option value="1.25">1.25x</option>
                             <option value="1.5">1.5x</option>
                             <option value="2">2x</option>
                         </select>
@@ -93,13 +152,101 @@
                 <i class="fas fa-exclamation-triangle"></i>
                 <h3>Oops! Something went wrong</h3>
                 <p id="errorMessage">Error message here</p>
-                <button class="error-btn" onclick="location.reload()">Try Again</button>
+                <div class="error-actions">
+                    <button class="error-btn" onclick="location.reload()">
+                        <i class="fas fa-redo"></i> Try Again
+                    </button>
+                    <button class="error-btn error-btn-secondary" onclick="resetAppFromError()">
+                        <i class="fas fa-arrow-left"></i> Go Back
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Features Section -->
+        <section class="features-section">
+            <h2 class="section-title">✨ Features</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-microphone-alt"></i>
+                    </div>
+                    <h3>Multiple Voices</h3>
+                    <p>Choose from male/female voices with US/UK accents</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-theater-masks"></i>
+                    </div>
+                    <h3>Dialogue Mode</h3>
+                    <p>Auto-switch voices for different characters in your story</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-tachometer-alt"></i>
+                    </div>
+                    <h3>Speed Control</h3>
+                    <p>Listen at 0.5x to 2x speed based on your preference</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-download"></i>
+                    </div>
+                    <h3>Download MP3</h3>
+                    <p>Save your audiobook for offline listening</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- How It Works Section -->
+        <section class="how-it-works-section">
+            <h2 class="section-title">📖 How It Works</h2>
+            <div class="steps-container">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h4>Upload PDF</h4>
+                        <p>Drag & drop or browse to select your PDF document</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h4>Choose Settings</h4>
+                        <p>Select voice, enable dialogue mode, adjust speed</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h4>Convert</h4>
+                        <p>Our AI extracts text and converts to natural speech</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-number">4</div>
+                    <div class="step-content">
+                        <h4>Listen & Download</h4>
+                        <p>Play immediately or download for offline listening</p>
+                    </div>
+                </div>
             </div>
         </section>
 
         <!-- Footer -->
         <footer class="footer">
-            <p>🎧 PDF to Audiobook Converter | Built with FastAPI</p>
+            <div class="footer-content">
+                <p><i class="fas fa-headphones"></i> PDF to Audiobook Converter</p>
+                <p class="footer-note">Built with FastAPI + gTTS | Hosted on GitHub Pages + Render</p>
+                <div class="footer-links">
+                    <a href="https://github.com/mohamedKandri/pdf-to-audiobook" target="_blank">
+                        <i class="fab fa-github"></i> Source Code
+                    </a>
+                    <a href="https://pdf-audiobook-api.onrender.com/docs" target="_blank">
+                        <i class="fas fa-book"></i> API Docs
+                    </a>
+                </div>
+            </div>
         </footer>
     </div>
 

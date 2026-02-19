@@ -1,5 +1,5 @@
 // ===== Configuration =====
-const API_BASE_URL = 'https://pdf-audiobook-api.onrender.com';
+const API_BASE_URL = 'http://127.0.0.1:8000';
 
 // ===== DOM Elements =====
 const uploadZone = document.getElementById('uploadZone');
@@ -15,22 +15,28 @@ const audioPlayer = document.getElementById('audioPlayer');
 const playPauseBtn = document.getElementById('playPauseBtn');
 const stopBtn = document.getElementById('stopBtn');
 const speedSelect = document.getElementById('speedSelect');
+const voiceSelect = document.getElementById('voiceSelect');
 const downloadBtn = document.getElementById('downloadBtn');
 const convertNewBtn = document.getElementById('convertNewBtn');
 const errorSection = document.getElementById('errorSection');
 const errorMessage = document.getElementById('errorMessage');
+const dialogueModeToggle = document.getElementById('dialogueModeToggle');
+const dialogueHint = document.getElementById('dialogueHint');
 
 // ===== State =====
 let currentAudioUrl = '';
 let currentFilename = '';
+let dialogueMode = false;
 
 // ===== Initialize =====
 document.addEventListener('DOMContentLoaded', () => {
     setupUploadZone();
     setupAudioPlayer();
     setupButtons();
+    setupDialogueMode();
     console.log('🎧 PDF to Audiobook Frontend Ready');
-    console.log('Connecting to Backend:', API_BASE_URL);
+    console.log('🔌 Connecting to Backend:', API_BASE_URL);
+    console.log('🎭 Dialogue Mode:', dialogueMode ? 'ON' : 'OFF');
 });
 
 // ===== Upload Zone Functions =====
@@ -66,11 +72,39 @@ function setupUploadZone() {
     });
 }
 
+// ===== Dialogue Mode Setup =====
+function setupDialogueMode() {
+    if (dialogueModeToggle) {
+        dialogueModeToggle.addEventListener('change', (e) => {
+            dialogueMode = e.target.checked;
+            
+            // Show/hide hint
+            if (dialogueHint) {
+                dialogueHint.style.display = dialogueMode ? 'block' : 'none';
+            }
+            
+            // Show/hide voice select (disabled in dialogue mode)
+            if (voiceSelect) {
+                voiceSelect.disabled = dialogueMode;
+                voiceSelect.style.opacity = dialogueMode ? '0.5' : '1';
+            }
+            
+            console.log('🎭 Dialogue Mode:', dialogueMode ? 'ON ✅' : 'OFF ❌');
+        });
+    }
+}
+
 // ===== Core Conversion Logic =====
 async function handleFileUpload(file) {
-    // Validate file size (50MB max)
-    if (file.size > 50 * 1024 * 1024) {
-        showError('File size exceeds 50MB limit');
+    // Validate file size (10MB max for free tier)
+    if (file.size > 10 * 1024 * 1024) {
+        showError('File size exceeds 10MB limit (free tier)');
+        return;
+    }
+    
+    // Validate file type
+    if (file.type !== 'application/pdf') {
+        showError('Please upload a valid PDF file');
         return;
     }
     
@@ -79,11 +113,20 @@ async function handleFileUpload(file) {
     
     const formData = new FormData();
     formData.append('file', file);
+    formData.append('voice', voiceSelect?.value || 'en-us-female');
+    formData.append('dialogue_mode', dialogueMode ? 'true' : 'false');
     
     try {
         // Update UI
-        statusDetail.textContent = 'Uploading PDF...';
+        if (dialogueMode) {
+            statusDetail.textContent = '🎭 Parsing dialogue segments...';
+        } else {
+            statusDetail.textContent = 'Uploading PDF...';
+        }
         progressFill.style.width = '20%';
+        
+        // Show server wake-up message
+        statusDetail.textContent = '🔄 Connecting to server... (first load may take 30s)';
         
         // Call Backend API
         const response = await fetch(`${API_BASE_URL}/api/v1/convert`, {
@@ -92,7 +135,11 @@ async function handleFileUpload(file) {
         });
         
         // Update UI
-        statusDetail.textContent = 'Processing text...';
+        if (dialogueMode) {
+            statusDetail.textContent = '🎙️ Converting dialogue segments...';
+        } else {
+            statusDetail.textContent = 'Processing text...';
+        }
         progressFill.style.width = '50%';
         
         if (!response.ok) {
@@ -104,7 +151,11 @@ async function handleFileUpload(file) {
         console.log('✅ Conversion successful:', data);
         
         // Update UI
-        statusDetail.textContent = 'Finalizing audio...';
+        if (dialogueMode) {
+            statusDetail.textContent = `✅ Converted ${data.segments_count || 1} segments`;
+        } else {
+            statusDetail.textContent = 'Finalizing audio...';
+        }
         progressFill.style.width = '100%';
         
         // Small delay for smooth UX
@@ -115,7 +166,15 @@ async function handleFileUpload(file) {
         
     } catch (error) {
         console.error('❌ Conversion error:', error);
-        showError(error.message);
+        
+        // Friendly error for Render sleep/timeout
+        if (error.message.includes('waking up') || error.message.includes('timeout')) {
+            showError('⏳ Server is waking up! Please try again in 30 seconds.');
+        } else if (error.message.includes('pydub') || error.message.includes('ffmpeg')) {
+            showError('🔧 Server configuration error. Please contact support.');
+        } else {
+            showError(error.message);
+        }
     }
 }
 
@@ -124,7 +183,7 @@ function showProcessing() {
     hideAllSections();
     statusSection.style.display = 'block';
     progressFill.style.width = '10%';
-    statusText.textContent = 'Converting PDF to Audio...';
+    statusText.textContent = dialogueMode ? '🎭 Converting Dialogue...' : '🎧 Converting PDF to Audio...';
     statusDetail.textContent = 'Initializing...';
 }
 
@@ -139,8 +198,17 @@ function showPlayer(filename, audioUrl) {
     audioPlayer.src = currentAudioUrl;
     audioPlayer.load(); // Reload player with new source
     
-    // Optional: Auto-play
-    // audioPlayer.play().catch(e => console.log("Auto-play blocked by browser"));
+    // Show dialogue mode indicator
+    if (dialogueMode) {
+        const indicator = document.createElement('div');
+        indicator.className = 'dialogue-indicator';
+        indicator.innerHTML = '🎭 Dialogue Mode Active';
+        indicator.style.cssText = 'background: #667eea; color: white; padding: 8px 15px; border-radius: 20px; font-size: 0.85rem; margin-bottom: 15px; display: inline-block;';
+        playerCard = document.querySelector('.player-card');
+        if (playerCard && !playerCard.querySelector('.dialogue-indicator')) {
+            playerCard.insertBefore(indicator, playerCard.firstChild);
+        }
+    }
 }
 
 function showError(message) {
@@ -170,16 +238,44 @@ function resetApp() {
     currentFilename = '';
     playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
     
+    // Remove dialogue indicator if exists
+    const indicator = document.querySelector('.dialogue-indicator');
+    if (indicator) {
+        indicator.remove();
+    }
+    
     // Show upload zone
     hideAllSections();
     uploadSection.style.display = 'block';
+    
+    // Reset dialogue mode UI
+    if (dialogueHint) {
+        dialogueHint.style.display = 'none';
+    }
+    if (voiceSelect) {
+        voiceSelect.disabled = false;
+        voiceSelect.style.opacity = '1';
+    }
 }
 
 // ===== Audio Player Controls =====
 function setupAudioPlayer() {
     playPauseBtn.addEventListener('click', togglePlayPause);
     stopBtn.addEventListener('click', stopAudio);
-    speedSelect.addEventListener('change', changeSpeed);
+    
+    // Speed control
+    if (speedSelect) {
+        speedSelect.addEventListener('change', changeSpeed);
+    }
+    
+    // Voice control (note: requires re-conversion)
+    if (voiceSelect) {
+        voiceSelect.addEventListener('change', () => {
+            if (currentFilename && !dialogueMode) {
+                showVoiceChangeNotice();
+            }
+        });
+    }
     
     // Update icon when state changes
     audioPlayer.addEventListener('play', () => {
@@ -215,6 +311,24 @@ function changeSpeed() {
     audioPlayer.playbackRate = speed;
 }
 
+function showVoiceChangeNotice() {
+    // Show a temporary notice that voice change requires re-conversion
+    const notice = document.createElement('div');
+    notice.className = 'voice-notice';
+    notice.innerHTML = '💡 Voice change requires re-conversion. Upload again to apply.';
+    notice.style.cssText = 'background: #fff3cd; color: #856404; padding: 10px 15px; border-radius: 8px; font-size: 0.9rem; margin-top: 15px; border-left: 4px solid #ffc107;';
+    
+    const playerCard = document.querySelector('.player-card');
+    if (playerCard && !playerCard.querySelector('.voice-notice')) {
+        playerCard.appendChild(notice);
+        
+        // Auto-remove after 5 seconds
+        setTimeout(() => {
+            notice.remove();
+        }, 5000);
+    }
+}
+
 // ===== Button Actions =====
 function setupButtons() {
     downloadBtn.addEventListener('click', downloadAudio);
@@ -234,3 +348,40 @@ function downloadAudio() {
         showError('No audio file available for download');
     }
 }
+
+// ===== Utility Functions =====
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+function formatTime(seconds) {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+}
+
+// ===== Debug/Console Info =====
+console.log('🎧 PDF to Audiobook Converter');
+console.log('Version: 1.0.0');
+console.log('Features: Voice Selection, Dialogue Mode, Speed Control');
+console.log('Backend:', API_BASE_URL);
+console.log('Ready to convert! 🚀');
+
+// Add to state
+let usePremiumVoices = false;
+
+// Add toggle handler in setupDialogueMode()
+const premiumToggle = document.getElementById('premiumToggle');
+if (premiumToggle) {
+    premiumToggle.addEventListener('change', (e) => {
+        usePremiumVoices = e.target.checked;
+        console.log(' Premium Voices:', usePremiumVoices ? 'ON' : 'OFF');
+    });
+}
+
+// Update handleFileUpload to send premium parameter
+formData.append('premium', usePremiumVoices ? 'true' : 'false');
