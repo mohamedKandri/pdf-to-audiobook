@@ -33,12 +33,15 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:3000",
         "http://127.0.0.1:3000",
-        "https://mohamedKandri.github.io",      # ✅ Your GitHub Pages
-        "https://mohamedkand.github.io",        # ✅ Alternative (check your username)
-        "https://pdf-audiobook-api.onrender.com", # ✅ Backend itself
-        "*"  # Keep for development (remove in production)
+        "https://mohamedKandri.github.io",
+        "https://mohamedkand.github.io",
+        "https://pdf-audiobook-api.onrender.com",
+        "*"
     ],
-
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Configure paths
 BASE_DIR = Path(__file__).resolve().parent
@@ -143,7 +146,8 @@ async def convert_pdf_to_audio(
         raise HTTPException(status_code=500, detail=f"Audio conversion failed: {str(e)}")
     
     # 5. Return Result
-    audio_url = f"http://127.0.0.1:8000/api/v1/audio/{audio_filename}"
+    backend_url = os.getenv("BACKEND_URL", "http://127.0.0.1:8000")
+    audio_url = f"{backend_url}/api/v1/audio/{audio_filename}"
     
     return JSONResponse(
         status_code=200,

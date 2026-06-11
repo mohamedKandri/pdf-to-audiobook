@@ -1,5 +1,5 @@
 // ===== Configuration =====
-const API_BASE_URL = 'https://your-render-app.onrender.com';
+const API_BASE_URL = 'https://pdf-audiobook-api.onrender.com';
 
 // ===== DOM Elements =====
 const uploadZone = document.getElementById('uploadZone');
@@ -115,6 +115,7 @@ async function handleFileUpload(file) {
     formData.append('file', file);
     formData.append('voice', voiceSelect?.value || 'en-us-female');
     formData.append('dialogue_mode', dialogueMode ? 'true' : 'false');
+    formData.append('premium', usePremiumVoices ? 'true' : 'false');
     
     try {
         // Update UI
@@ -371,17 +372,13 @@ console.log('Features: Voice Selection, Dialogue Mode, Speed Control');
 console.log('Backend:', API_BASE_URL);
 console.log('Ready to convert! 🚀');
 
-// Add to state
+// Premium voices state
 let usePremiumVoices = false;
 
-// Add toggle handler in setupDialogueMode()
 const premiumToggle = document.getElementById('premiumToggle');
 if (premiumToggle) {
     premiumToggle.addEventListener('change', (e) => {
         usePremiumVoices = e.target.checked;
-        console.log(' Premium Voices:', usePremiumVoices ? 'ON' : 'OFF');
+        console.log('Premium Voices:', usePremiumVoices ? 'ON' : 'OFF');
     });
 }
-
-// Update handleFileUpload to send premium parameter
-formData.append('premium', usePremiumVoices ? 'true' : 'false');
