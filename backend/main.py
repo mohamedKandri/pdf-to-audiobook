@@ -35,7 +35,7 @@ app.add_middleware(
         "http://127.0.0.1:3000",
         "https://mohamedKandri.github.io",
         "https://mohamedkand.github.io",
-        "https://pdf-audiobook-api.onrender.com",
+        "https://pdf-audiobook-backend.onrender.com",
         "*"
     ],
     allow_credentials=True,
@@ -131,7 +131,7 @@ async def convert_pdf_to_audio(
                 elevenlabs_voice = voice_map.get(voice, "relaxed_female")
                 
                 audio_filename = convert_with_elevenlabs(text, OUTPUT_DIR, elevenlabs_voice)
-                print(f"✅ Converted with ElevenLabs voice: {elevenlabs_voice}")
+                print(f"✅ Converted with ElevenLabs voice: {_voice}")
                 
             except Exception as e:
                 print(f"⚠️ ElevenLabs failed, falling back to gTTS: {str(e)}")

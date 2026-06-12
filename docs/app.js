@@ -1,5 +1,5 @@
 // ===== Configuration =====
-const API_BASE_URL = 'https://pdf-to-audiobook.onrender.com';
+const API_BASE_URL = 'https://pdf-audiobook-backend.onrender.com';
 
 // ===== DOM Elements =====
 const uploadZone = document.getElementById('uploadZone');
